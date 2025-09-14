@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Aerohive CLI Basic Config Generator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 40px;
+            background-color: #f7f7f7;
+        }
+        h1 {
+            color: #2a5d9f;
+        }
+        label {
+            display: block;
+            margin-top: 15px;
+        }
+        input[type="text"], textarea {
+            width: 100%;
+            padding: 8px;
+            margin-top: 5px;
+            box-sizing: border-box;
+        }
+        select {
+            width: 100%;
+            padding: 8px;
+            margin-top: 5px;
+        }
+        button {
+            margin-top: 15px;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        .success { background-color: #4CAF50; color: white; border: none; }
+        .info { background-color: #2196F3; color: white; border: none; }
+        pre {
+            background-color: #333;
+            color: #fff;
+            padding: 15px;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+
+<h1>Aerohive CLI Command Generator</h1>
+
+<label for="ssid">SSID Name:</label>
+<input type="text" id="ssid" placeholder="Enter SSID name" value="AeroHive">
+
+<label for="password">Password:</label>
+<input type="text" id="password" placeholder="Enter WPA2 password" value="yourpassword">
+
+<label for="bands">Select Band(s):</label>
+<select id="bands" multiple>
+    <option value="2.4GHz" selected>2.4GHz</option>
+    <option value="5GHz" selected>5GHz</option>
+</select>
+
+<button class="success" onclick="generateCommands()">Generate Commands</button>
+
+<label for="commands">Generated Commands:</label>
+<textarea id="commands" rows="15" placeholder="Commands will appear here..."></textarea>
+
+<button class="info" onclick="copyCommands()">Copy to Clipboard</button>
+
+
+
+<script>
+function generateCommands() {
+    const ssid = document.getElementById('ssid').value.trim();
+    const password = document.getElementById('password').value.trim();
+    const bandsSelect = document.getElementById('bands');
+    const bands = Array.from(bandsSelect.selectedOptions).map(o => o.value);
+
+    let commands = [];
+
+    // Remove existing SSID
+    commands.push(`no ssid ${ssid}`);
+
+    // Create SSID
+    commands.push(`ssid ${ssid}`);
+
+    // Security object
+    const secObj = `${ssid}Sec`;
+    commands.push(`security-object ${secObj}`);
+    commands.push(`security-object ${secObj} security protocol-suite wpa2-aes-psk ascii-key ${password}`);
+    commands.push(`ssid ${ssid} security-object ${secObj}`);
+
+    // Enable WMM (ACs)
+    commands.push(`ssid ${ssid} admctl ac 0 enable`);
+    commands.push(`ssid ${ssid} admctl ac 1 enable`);
+    commands.push(`ssid ${ssid} admctl ac 2 enable`);
+    commands.push(`ssid ${ssid} admctl ac 3 enable`);
+
+    // Enable RRM
+    commands.push(`ssid ${ssid} rrm enable`);
+
+    // Bind SSID to interfaces based on selected bands
+    if (bands.includes('2.4GHz')) commands.push(`interface Wifi0.1 ssid ${ssid}`);
+    if (bands.includes('5GHz')) commands.push(`interface Wifi1.1 ssid ${ssid}`);
+
+    // Save config to bootstrap
+    commands.push(`save config current bootstrap`);
+
+    // Show radio profiles
+    commands.push(`show radio profile`);
+
+    // Display in textarea
+    document.getElementById('commands').value = commands.join('\n');
+
+    // Display formatted output
+    document.getElementById('output').textContent = commands.join('\n');
+}
+
+function copyCommands() {
+    const textarea = document.getElementById('commands');
+    textarea.select();
+    document.execCommand('copy');
+    alert('Commands copied to clipboard!');
+}
+</script>
+
+</body>
+</html>

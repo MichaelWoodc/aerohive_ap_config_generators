@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Aerohive CLI Command Generator - Enhanced</title>
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        margin: 40px;
+        background-color: #f7f7f7;
+    }
+    h1 {
+        color: #2a5d9f;
+    }
+    label {
+        display: block;
+        margin-top: 15px;
+    }
+    input[type="text"], input[type="number"], textarea, select {
+        width: 100%;
+        padding: 8px;
+        margin-top: 5px;
+        box-sizing: border-box;
+    }
+    button {
+        margin-top: 15px;
+        padding: 10px 20px;
+        font-size: 16px;
+        cursor: pointer;
+    }
+    .success { background-color: #4CAF50; color: white; border: none; }
+    .info { background-color: #2196F3; color: white; border: none; }
+</style>
+</head>
+<body>
+
+<h1>Aerohive CLI Generator - Speed Enhancements</h1>
+
+<label for="ssid">SSID Name:</label>
+<input type="text" id="ssid" value="AeroHive">
+
+<label for="password">Password:</label>
+<input type="text" id="password" value="yourpassword">
+
+<label for="bands">Select Band(s):</label>
+<select id="bands" multiple>
+    <option value="2.4GHz" selected>2.4GHz</option>
+    <option value="5GHz" selected>5GHz</option>
+</select>
+
+<label for="radioProfile">Radio Profile Name:</label>
+<input type="text" id="radioProfile" value="radio_ng0">
+
+<label for="channelWidth">Channel Width:</label>
+<select id="channelWidth">
+    <option value="20">20 MHz</option>
+    <option value="40">40 MHz</option>
+    <option value="40-above">40-above</option>
+    <option value="40-below">40-below</option>
+    <option value="80">80 MHz</option>
+</select>
+
+<label for="dynamicTrigger">Dynamic Channel Width Trigger:</label>
+<select id="dynamicTrigger">
+    <option value="high">High</option>
+    <option value="medium">Medium</option>
+    <option value="low">Low</option>
+</select>
+
+<label for="bandSteeringMode">Band Steering Mode:</label>
+<select id="bandSteeringMode">
+    <option value="balance-band">Balance-band</option>
+    <option value="prefer-5g">Prefer 5GHz</option>
+    <option value="force-5g">Force 5GHz</option>
+</select>
+
+<label for="bandSteeringThreshold">Band Steering Threshold (number):</label>
+<input type="number" id="bandSteeringThreshold" value="70">
+
+<button class="success" onclick="generateCommands()">Generate Commands</button>
+
+<label for="commands">Generated Commands:</label>
+<textarea id="commands" rows="20" placeholder="Commands will appear here..."></textarea>
+
+<button class="info" onclick="copyCommands()">Copy to Clipboard</button>
+
+<script>
+function generateCommands() {
+    const ssid = document.getElementById('ssid').value.trim();
+    const password = document.getElementById('password').value.trim();
+    const bands = Array.from(document.getElementById('bands').selectedOptions).map(o => o.value);
+    const radio = document.getElementById('radioProfile').value.trim();
+    const channelWidth = document.getElementById('channelWidth').value;
+    const dynamicTrigger = document.getElementById('dynamicTrigger').value;
+    const bandSteeringMode = document.getElementById('bandSteeringMode').value;
+    const bandSteeringThreshold = document.getElementById('bandSteeringThreshold').value;
+
+    let commands = [];
+
+    // SSID and security
+    const secObj = `${ssid}Sec`;
+    commands.push(`no ssid ${ssid}`);
+    commands.push(`ssid ${ssid}`);
+    commands.push(`security-object ${secObj}`);
+    commands.push(`security-object ${secObj} security protocol-suite wpa2-aes-psk ascii-key ${password}`);
+    commands.push(`ssid ${ssid} security-object ${secObj}`);
+    commands.push(`ssid ${ssid} admctl ac 0 enable`);
+    commands.push(`ssid ${ssid} admctl ac 1 enable`);
+    commands.push(`ssid ${ssid} admctl ac 2 enable`);
+    commands.push(`ssid ${ssid} admctl ac 3 enable`);
+    commands.push(`ssid ${ssid} rrm enable`);
+    if (bands.includes('2.4GHz')) commands.push(`interface Wifi0.1 ssid ${ssid}`);
+    if (bands.includes('5GHz')) commands.push(`interface Wifi1.1 ssid ${ssid}`);
+    commands.push(`save config current bootstrap`);
+
+    // Radio profile - speed enhancements
+    commands.push(`radio profile ${radio} channel-width ${channelWidth}`);
+    commands.push(`radio profile ${radio} dynamic-channel-width enable`);
+    commands.push(`radio profile ${radio} dynamic-channel-width trigger-threshold ${dynamicTrigger}`);
+    commands.push(`radio profile ${radio} band-steering enable`);
+    commands.push(`radio profile ${radio} band-steering mode ${bandSteeringMode}`);
+    commands.push(`radio profile ${radio} band-steering balance-band threshold ${bandSteeringThreshold}`);
+    commands.push(`show radio profile`);
+
+    document.getElementById('commands').value = commands.join('\n');
+}
+
+function copyCommands() {
+    const textarea = document.getElementById('commands');
+    textarea.select();
+    document.execCommand('copy');
+    alert('Commands copied to clipboard!');
+}
+</script>
+
+</body>
+</html>
